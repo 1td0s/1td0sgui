@@ -1,7 +1,7 @@
 --========================================================--
 --                       1td0s UI LIBRARY                  --
 --========================================================--
--- Version: 6.0.0
+-- Version: 6.0.1
 --
 -- Usage:
 -- local tdos = loadstring(game:HttpGet("RAW_URL"))()
@@ -21,7 +21,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local tdos = {
     Name = "1td0s",
-    Version = "6.0.0"
+    Version = "6.0.1"
 }
 
 --========================================================--
