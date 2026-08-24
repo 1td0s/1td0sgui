@@ -1,0 +1,1792 @@
+--========================================================--
+--                    1td0s UI LIBRARY                    --
+--========================================================--
+-- Version: 1.0.0
+--
+-- Load:
+-- local tdos = loadstring(game:HttpGet("RAW_URL"))()
+--
+--========================================================--
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local tdos = {}
+
+tdos.Version = "1.0.0"
+tdos.Name = "1td0s"
+
+--========================================================--
+--                        THEME                           --
+--========================================================--
+
+local Theme = {
+    Background = Color3.fromRGB(7, 11, 22),
+    Sidebar = Color3.fromRGB(10, 15, 29),
+    Panel = Color3.fromRGB(15, 21, 38),
+    PanelHover = Color3.fromRGB(22, 31, 52),
+
+    Stroke = Color3.fromRGB(35, 49, 78),
+
+    Accent = Color3.fromRGB(65, 145, 255),
+    AccentDark = Color3.fromRGB(40, 105, 205),
+
+    Text = Color3.fromRGB(235, 241, 255),
+    SubText = Color3.fromRGB(137, 151, 178),
+    Muted = Color3.fromRGB(74, 88, 115),
+
+    White = Color3.fromRGB(255, 255, 255)
+}
+
+tdos.Theme = Theme
+
+--========================================================--
+--                    UTILITIES                           --
+--========================================================--
+
+local function New(className, properties, parent)
+
+    local object = Instance.new(className)
+
+    for property, value in pairs(properties or {}) do
+        object[property] = value
+    end
+
+    object.Parent = parent
+
+    return object
+end
+
+local function Corner(object, radius)
+
+    local corner = Instance.new("UICorner")
+
+    corner.CornerRadius = UDim.new(0, radius or 8)
+
+    corner.Parent = object
+
+    return corner
+end
+
+local function AddStroke(object, color, thickness)
+
+    local stroke = Instance.new("UIStroke")
+
+    stroke.Color = color or Theme.Stroke
+    stroke.Thickness = thickness or 1
+
+    stroke.Parent = object
+
+    return stroke
+end
+
+local function Tween(object, properties, duration)
+
+    local tween = TweenService:Create(
+        object,
+        TweenInfo.new(
+            duration or 0.15,
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.Out
+        ),
+        properties
+    )
+
+    tween:Play()
+
+    return tween
+end
+
+local function GetGuiParent()
+
+    local success, result = pcall(function()
+
+        if typeof(gethui) == "function" then
+            return gethui()
+        end
+
+        return game:GetService("CoreGui")
+
+    end)
+
+    if success and result then
+        return result
+    end
+
+    return game:GetService("CoreGui")
+end
+
+--========================================================--
+--                      DRAG SYSTEM                       --
+--========================================================--
+
+local function MakeDraggable(handle, target)
+
+    local dragging = false
+    local dragStart
+    local startPosition
+
+    handle.InputBegan:Connect(function(input)
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+
+            dragging = true
+
+            dragStart = input.Position
+            startPosition = target.Position
+
+            input.Changed:Connect(function()
+
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+
+            end)
+
+        end
+
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+
+        if not dragging then
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+
+            local delta = input.Position - dragStart
+
+            target.Position = UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset + delta.X,
+
+                startPosition.Y.Scale,
+                startPosition.Y.Offset + delta.Y
+            )
+
+        end
+
+    end)
+
+end
+
+--========================================================--
+--                     COLOR PARSER                       --
+--========================================================--
+
+local function HexToColor3(hex)
+
+    hex = tostring(hex or "")
+    hex = hex:gsub("#", "")
+
+    if #hex ~= 6 then
+        return nil
+    end
+
+    local r = tonumber(hex:sub(1, 2), 16)
+    local g = tonumber(hex:sub(3, 4), 16)
+    local b = tonumber(hex:sub(5, 6), 16)
+
+    if not r or not g or not b then
+        return nil
+    end
+
+    return Color3.fromRGB(r, g, b)
+
+end
+
+local function Color3ToHex(color)
+
+    return string.format(
+        "#%02X%02X%02X",
+        math.floor(color.R * 255),
+        math.floor(color.G * 255),
+        math.floor(color.B * 255)
+    )
+
+end
+
+--========================================================--
+--                   CREATE WINDOW                        --
+--========================================================--
+
+function tdos:CreateWindow(options)
+
+    options = options or {}
+
+    local window = {}
+
+    window.Name = options.Name or "1td0s"
+    window.Subtitle = options.Subtitle or "UI Library"
+
+    --====================================================--
+    --                     FPS                            --
+    --====================================================--
+
+    local FPS = 0
+    local FrameCount = 0
+    local LastFPSUpdate = tick()
+
+    RunService.RenderStepped:Connect(function()
+
+        FrameCount += 1
+
+        if tick() - LastFPSUpdate >= 1 then
+
+            FPS = FrameCount
+            FrameCount = 0
+            LastFPSUpdate = tick()
+
+        end
+
+    end)
+
+    function window:GetFPS()
+        return FPS
+    end
+
+    --====================================================--
+    --                    SCREEN GUI                      --
+    --====================================================--
+
+    local Parent = GetGuiParent()
+
+    local ScreenGui = New("ScreenGui", {
+        Name = "1td0s_" .. tostring(math.random(1000, 9999)),
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    }, Parent)
+
+    window.ScreenGui = ScreenGui
+
+    --====================================================--
+    --                     MAIN                           --
+    --====================================================--
+
+    local Main = New("Frame", {
+
+        Name = "Main",
+
+        Size = UDim2.new(0, 760, 0, 500),
+
+        Position = UDim2.new(
+            0.5,
+            -380,
+            0.5,
+            -250
+        ),
+
+        BackgroundColor3 = Theme.Background,
+
+        BorderSizePixel = 0,
+
+        ClipsDescendants = true
+
+    }, ScreenGui)
+
+    Corner(Main, 12)
+    AddStroke(Main, Theme.Stroke, 1)
+
+    window.Main = Main
+
+    --====================================================--
+    --                     HEADER                         --
+    --====================================================--
+
+    local Header = New("Frame", {
+
+        Name = "Header",
+
+        Size = UDim2.new(1, 0, 0, 62),
+
+        BackgroundTransparency = 1
+
+    }, Main)
+
+    MakeDraggable(Header, Main)
+
+    --====================================================--
+    --                   PLAYER ICON                      --
+    --====================================================--
+
+    local PlayerIcon = New("TextLabel", {
+
+        Size = UDim2.new(0, 32, 0, 32),
+
+        Position = UDim2.new(0, 12, 0, 14),
+
+        BackgroundColor3 = Theme.Panel,
+
+        Text = "●",
+
+        TextColor3 = Theme.Accent,
+
+        TextSize = 15,
+
+        Font = Enum.Font.GothamBold
+
+    }, Header)
+
+    Corner(PlayerIcon, 8)
+
+    --====================================================--
+    --                 DISPLAY NAME                      --
+    --====================================================--
+
+    local DisplayName = New("TextLabel", {
+
+        Size = UDim2.new(0, 250, 0, 21),
+
+        Position = UDim2.new(0, 52, 0, 8),
+
+        BackgroundTransparency = 1,
+
+        Text = LocalPlayer.DisplayName,
+
+        TextColor3 = Theme.Text,
+
+        TextSize = 14,
+
+        Font = Enum.Font.GothamSemibold,
+
+        TextXAlignment = Enum.TextXAlignment.Left
+
+    }, Header)
+
+    --====================================================--
+    --                    USERNAME                       --
+    --====================================================--
+
+    local Username = New("TextLabel", {
+
+        Size = UDim2.new(0, 250, 0, 18),
+
+        Position = UDim2.new(0, 52, 0, 30),
+
+        BackgroundTransparency = 1,
+
+        Text = "@" .. LocalPlayer.Name,
+
+        TextColor3 = Theme.SubText,
+
+        TextSize = 11,
+
+        Font = Enum.Font.Gotham,
+
+        TextXAlignment = Enum.TextXAlignment.Left
+
+    }, Header)
+
+    window.UsernameLabel = Username
+
+    --====================================================--
+    --                       FPS                          --
+    --====================================================--
+
+    local FPSLabel = New("TextLabel", {
+
+        Size = UDim2.new(0, 100, 0, 25),
+
+        Position = UDim2.new(1, -155, 0, 18),
+
+        BackgroundTransparency = 1,
+
+        Text = "● 0 FPS",
+
+        TextColor3 = Theme.Accent,
+
+        TextSize = 12,
+
+        Font = Enum.Font.GothamSemibold,
+
+        TextXAlignment = Enum.TextXAlignment.Right
+
+    }, Header)
+
+    window.FPSLabel = FPSLabel
+
+    task.spawn(function()
+
+        while ScreenGui.Parent do
+
+            FPSLabel.Text = "● " .. tostring(FPS) .. " FPS"
+
+            task.wait(0.5)
+
+        end
+
+    end)
+
+    --====================================================--
+    --                    MINIMIZE                       --
+    --====================================================--
+
+    local Minimize = New("TextButton", {
+
+        Size = UDim2.new(0, 32, 0, 32),
+
+        Position = UDim2.new(1, -82, 0, 12),
+
+        BackgroundTransparency = 1,
+
+        Text = "−",
+
+        TextColor3 = Theme.SubText,
+
+        TextSize = 20,
+
+        Font = Enum.Font.Gotham,
+
+        AutoButtonColor = false
+
+    }, Header)
+
+    --====================================================--
+    --                      CLOSE                         --
+    --====================================================--
+
+    local Close = New("TextButton", {
+
+        Size = UDim2.new(0, 32, 0, 32),
+
+        Position = UDim2.new(1, -45, 0, 12),
+
+        BackgroundTransparency = 1,
+
+        Text = "×",
+
+        TextColor3 = Theme.SubText,
+
+        TextSize = 20,
+
+        Font = Enum.Font.Gotham,
+
+        AutoButtonColor = false
+
+    }, Header)
+
+    --====================================================--
+    --                       BODY                         --
+    --====================================================--
+
+    local Body = New("Frame", {
+
+        Name = "Body",
+
+        Size = UDim2.new(1, 0, 1, -92),
+
+        Position = UDim2.new(0, 0, 0, 62),
+
+        BackgroundTransparency = 1
+
+    }, Main)
+
+    --====================================================--
+    --                     SIDEBAR                        --
+    --====================================================--
+
+    local Sidebar = New("Frame", {
+
+        Name = "Sidebar",
+
+        Size = UDim2.new(0, 156, 1, 0),
+
+        BackgroundColor3 = Theme.Sidebar,
+
+        BorderSizePixel = 0
+
+    }, Body)
+
+    local MenuLabel = New("TextLabel", {
+
+        Size = UDim2.new(1, -20, 0, 25),
+
+        Position = UDim2.new(0, 12, 0, 8),
+
+        BackgroundTransparency = 1,
+
+        Text = "MENU",
+
+        TextColor3 = Theme.Muted,
+
+        TextSize = 12,
+
+        Font = Enum.Font.GothamBold,
+
+        TextXAlignment = Enum.TextXAlignment.Left
+
+    }, Sidebar)
+
+    local TabHolder = New("Frame", {
+
+        Size = UDim2.new(1, -12, 1, -45),
+
+        Position = UDim2.new(0, 6, 0, 38),
+
+        BackgroundTransparency = 1
+
+    }, Sidebar)
+
+    New("UIListLayout", {
+
+        Padding = UDim.new(0, 6),
+
+        SortOrder = Enum.SortOrder.LayoutOrder
+
+    }, TabHolder)
+
+    --====================================================--
+    --                    CONTENT                        --
+    --====================================================--
+
+    local Content = New("Frame", {
+
+        Name = "Content",
+
+        Size = UDim2.new(1, -156, 1, 0),
+
+        Position = UDim2.new(0, 156, 0, 0),
+
+        BackgroundTransparency = 1
+
+    }, Body)
+
+    --====================================================--
+    --                     FOOTER                         --
+    --====================================================--
+
+    local Footer = New("TextLabel", {
+
+        Size = UDim2.new(1, 0, 0, 25),
+
+        Position = UDim2.new(0, 0, 1, -25),
+
+        BackgroundTransparency = 1,
+
+        Text = window.Name,
+
+        TextColor3 = Theme.Muted,
+
+        TextSize = 10,
+
+        Font = Enum.Font.Gotham,
+
+        TextXAlignment = Enum.TextXAlignment.Center
+
+    }, Main)
+
+    window.Footer = Footer
+
+    --====================================================--
+    --                    RESIZE                          --
+    --====================================================--
+
+    local ResizeHandle = New("TextButton", {
+
+        Name = "ResizeHandle",
+
+        Size = UDim2.new(0, 32, 0, 32),
+
+        Position = UDim2.new(1, -32, 1, -32),
+
+        BackgroundTransparency = 1,
+
+        Text = "↘",
+
+        TextColor3 = Theme.SubText,
+
+        TextSize = 18,
+
+        Font = Enum.Font.GothamBold,
+
+        AutoButtonColor = false,
+
+        ZIndex = 100
+
+    }, Main)
+
+    window.ResizeHandle = ResizeHandle
+
+    local Resizing = false
+    local ResizeStart
+    local StartSize
+
+    ResizeHandle.InputBegan:Connect(function(input)
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+            Resizing = true
+
+            ResizeStart = input.Position
+            StartSize = Main.AbsoluteSize
+
+        end
+
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Resizing = false
+        end
+
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+
+        if not Resizing then
+            return
+        end
+
+        if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+            return
+        end
+
+        local mouse = UserInputService:GetMouseLocation()
+
+        local DeltaX = mouse.X - ResizeStart.X
+        local DeltaY = mouse.Y - ResizeStart.Y
+
+        local Width = math.clamp(
+            StartSize.X + DeltaX,
+            500,
+            1100
+        )
+
+        local Height = math.clamp(
+            StartSize.Y + DeltaY,
+            350,
+            750
+        )
+
+        Main.Size = UDim2.new(
+            0,
+            Width,
+            0,
+            Height
+        )
+
+    end)
+
+    --====================================================--
+    --                   MINIMIZE                        --
+    --====================================================--
+
+    local Minimized = false
+    local SavedSize = Main.Size
+
+    Minimize.MouseButton1Click:Connect(function()
+
+        if not Minimized then
+
+            SavedSize = Main.Size
+
+            Minimized = true
+
+            Body.Visible = false
+            Footer.Visible = false
+            ResizeHandle.Visible = false
+
+            Main.Size = UDim2.new(
+                0,
+                380,
+                0,
+                62
+            )
+
+        else
+
+            Minimized = false
+
+            Body.Visible = true
+            Footer.Visible = true
+            ResizeHandle.Visible = true
+
+            Main.Size = SavedSize
+
+        end
+
+    end)
+
+    --====================================================--
+    --                     CLOSE                         --
+    --====================================================--
+
+    Close.MouseButton1Click:Connect(function()
+
+        ScreenGui:Destroy()
+
+    end)
+
+    --====================================================--
+    --                      TABS                         --
+    --====================================================--
+
+    local Tabs = {}
+    local ActiveTab = nil
+
+    function window:CreateTab(options)
+
+        options = options or {}
+
+        local Tab = {}
+
+        Tab.Name = options.Name or "Tab"
+        Tab.Icon = options.Icon or "◆"
+
+        local TabButton = New("TextButton", {
+
+            Size = UDim2.new(1, 0, 0, 38),
+
+            BackgroundColor3 = Theme.Panel,
+
+            BackgroundTransparency = 1,
+
+            Text = Tab.Icon .. "  " .. Tab.Name,
+
+            TextColor3 = Theme.SubText,
+
+            TextSize = 14,
+
+            Font = Enum.Font.GothamMedium,
+
+            TextXAlignment = Enum.TextXAlignment.Left,
+
+            AutoButtonColor = false
+
+        }, TabHolder)
+
+        Corner(TabButton, 8)
+
+        local TabPage = New("ScrollingFrame", {
+
+            Size = UDim2.new(1, -18, 1, -10),
+
+            Position = UDim2.new(0, 9, 0, 5),
+
+            BackgroundTransparency = 1,
+
+            BorderSizePixel = 0,
+
+            ScrollBarThickness = 3,
+
+            ScrollBarImageColor3 = Theme.Accent,
+
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+
+            Visible = false
+
+        }, Content)
+
+        New("UIPadding", {
+
+            PaddingLeft = UDim.new(0, 5),
+
+            PaddingRight = UDim.new(0, 5),
+
+            PaddingTop = UDim.new(0, 5),
+
+            PaddingBottom = UDim.new(0, 10)
+
+        }, TabPage)
+
+        New("UIListLayout", {
+
+            Padding = UDim.new(0, 9),
+
+            SortOrder = Enum.SortOrder.LayoutOrder
+
+        }, TabPage)
+
+        Tab.Button = TabButton
+        Tab.Page = TabPage
+
+        table.insert(Tabs, Tab)
+
+        local function Activate()
+
+            for _, OtherTab in ipairs(Tabs) do
+
+                OtherTab.Page.Visible = false
+
+                OtherTab.Button.BackgroundTransparency = 1
+                OtherTab.Button.TextColor3 = Theme.SubText
+
+            end
+
+            TabPage.Visible = true
+
+            TabButton.BackgroundTransparency = 0
+            TabButton.BackgroundColor3 = Color3.fromRGB(26, 39, 67)
+            TabButton.TextColor3 = Theme.Text
+
+            ActiveTab = Tab
+
+        end
+
+        TabButton.MouseButton1Click:Connect(Activate)
+
+        if not ActiveTab then
+            Activate()
+        end
+
+        --================================================--
+        --                  SECTION                       --
+        --================================================--
+
+        function Tab:CreateSection(name)
+
+            return New("TextLabel", {
+
+                Size = UDim2.new(1, 0, 0, 25),
+
+                BackgroundTransparency = 1,
+
+                Text = string.upper(name or "SECTION"),
+
+                TextColor3 = Theme.Accent,
+
+                TextSize = 12,
+
+                Font = Enum.Font.GothamBold,
+
+                TextXAlignment = Enum.TextXAlignment.Left
+
+            }, TabPage)
+
+        end
+
+        --================================================--
+        --                    LABEL                        --
+        --================================================--
+
+        function Tab:CreateLabel(text)
+
+            return New("TextLabel", {
+
+                Size = UDim2.new(1, 0, 0, 35),
+
+                BackgroundTransparency = 1,
+
+                Text = tostring(text or ""),
+
+                TextColor3 = Theme.SubText,
+
+                TextSize = 13,
+
+                Font = Enum.Font.Gotham,
+
+                TextXAlignment = Enum.TextXAlignment.Left,
+
+                TextWrapped = true
+
+            }, TabPage)
+
+        end
+
+        --================================================--
+        --                    BUTTON                       --
+        --================================================--
+
+        function Tab:CreateButton(options)
+
+            options = options or {}
+
+            local Button = New("TextButton", {
+
+                Size = UDim2.new(1, 0, 0, 43),
+
+                BackgroundColor3 = Theme.Panel,
+
+                Text = options.Name or "Button",
+
+                TextColor3 = Theme.Text,
+
+                TextSize = 14,
+
+                Font = Enum.Font.GothamMedium,
+
+                AutoButtonColor = false
+
+            }, TabPage)
+
+            Corner(Button, 8)
+
+            Button.MouseEnter:Connect(function()
+
+                Tween(Button, {
+                    BackgroundColor3 = Theme.PanelHover
+                }, 0.1)
+
+            end)
+
+            Button.MouseLeave:Connect(function()
+
+                Tween(Button, {
+                    BackgroundColor3 = Theme.Panel
+                }, 0.1)
+
+            end)
+
+            Button.MouseButton1Click:Connect(function()
+
+                if typeof(options.Callback) == "function" then
+                    task.spawn(options.Callback)
+                end
+
+            end)
+
+            return Button
+
+        end
+
+        --================================================--
+        --                    TOGGLE                       --
+        --================================================--
+
+        function Tab:CreateToggle(options)
+
+            options = options or {}
+
+            local Enabled = options.Default == true
+
+            local Holder = New("Frame", {
+
+                Size = UDim2.new(1, 0, 0, 43),
+
+                BackgroundColor3 = Theme.Panel
+
+            }, TabPage)
+
+            Corner(Holder, 8)
+
+            New("TextLabel", {
+
+                Size = UDim2.new(1, -75, 1, 0),
+
+                Position = UDim2.new(0, 14, 0, 0),
+
+                BackgroundTransparency = 1,
+
+                Text = options.Name or "Toggle",
+
+                TextColor3 = Theme.Text,
+
+                TextSize = 14,
+
+                Font = Enum.Font.Gotham,
+
+                TextXAlignment = Enum.TextXAlignment.Left
+
+            }, Holder)
+
+            local Switch = New("TextButton", {
+
+                Size = UDim2.new(0, 44, 0, 25),
+
+                Position = UDim2.new(1, -58, 0.5, -12),
+
+                BackgroundColor3 = Color3.fromRGB(12, 20, 38),
+
+                Text = "",
+
+                AutoButtonColor = false
+
+            }, Holder)
+
+            Corner(Switch, 13)
+            AddStroke(Switch, Theme.Stroke, 1)
+
+            local Knob = New("Frame", {
+
+                Size = UDim2.new(0, 17, 0, 17),
+
+                Position = UDim2.new(0, 4, 0.5, -8),
+
+                BackgroundColor3 = Color3.fromRGB(74, 91, 120)
+
+            }, Switch)
+
+            Corner(Knob, 10)
+
+            local ToggleObject = {}
+
+            local function Update()
+
+                if Enabled then
+
+                    Tween(Switch, {
+                        BackgroundColor3 = Theme.Accent
+                    }, 0.1)
+
+                    Tween(Knob, {
+                        Position = UDim2.new(1, -21, 0.5, -8),
+                        BackgroundColor3 = Theme.White
+                    }, 0.1)
+
+                else
+
+                    Tween(Switch, {
+                        BackgroundColor3 = Color3.fromRGB(12, 20, 38)
+                    }, 0.1)
+
+                    Tween(Knob, {
+                        Position = UDim2.new(0, 4, 0.5, -8),
+                        BackgroundColor3 = Color3.fromRGB(74, 91, 120)
+                    }, 0.1)
+
+                end
+
+            end
+
+            local function Set(value)
+
+                Enabled = value == true
+
+                Update()
+
+                if typeof(options.Callback) == "function" then
+                    task.spawn(options.Callback, Enabled)
+                end
+
+            end
+
+            Switch.MouseButton1Click:Connect(function()
+
+                Set(not Enabled)
+
+            end)
+
+            ToggleObject.Set = Set
+
+            function ToggleObject:Get()
+                return Enabled
+            end
+
+            Update()
+
+            return ToggleObject
+
+        end
+
+        --================================================--
+        --                    SLIDER                       --
+        --================================================--
+
+        function Tab:CreateSlider(options)
+
+            options = options or {}
+
+            local Minimum = tonumber(options.Min) or 0
+            local Maximum = tonumber(options.Max) or 100
+            local Value = tonumber(options.Default) or Minimum
+
+            if Maximum <= Minimum then
+                Maximum = Minimum + 1
+            end
+
+            Value = math.clamp(
+                Value,
+                Minimum,
+                Maximum
+            )
+
+            local Holder = New("Frame", {
+
+                Size = UDim2.new(1, 0, 0, 65),
+
+                BackgroundColor3 = Theme.Panel
+
+            }, TabPage)
+
+            Corner(Holder, 8)
+
+            New("TextLabel", {
+
+                Size = UDim2.new(0.7, 0, 0, 25),
+
+                Position = UDim2.new(0, 14, 0, 6),
+
+                BackgroundTransparency = 1,
+
+                Text = options.Name or "Slider",
+
+                TextColor3 = Theme.Text,
+
+                TextSize = 14,
+
+                Font = Enum.Font.Gotham,
+
+                TextXAlignment = Enum.TextXAlignment.Left
+
+            }, Holder)
+
+            local ValueLabel = New("TextLabel", {
+
+                Size = UDim2.new(0.25, 0, 0, 25),
+
+                Position = UDim2.new(0.72, 0, 0, 6),
+
+                BackgroundTransparency = 1,
+
+                Text = tostring(Value),
+
+                TextColor3 = Theme.Accent,
+
+                TextSize = 13,
+
+                Font = Enum.Font.GothamSemibold,
+
+                TextXAlignment = Enum.TextXAlignment.Right
+
+            }, Holder)
+
+            local Bar = New("Frame", {
+
+                Size = UDim2.new(1, -28, 0, 7),
+
+                Position = UDim2.new(0, 14, 0, 44),
+
+                BackgroundColor3 = Color3.fromRGB(24, 34, 55)
+
+            }, Holder)
+
+            Corner(Bar, 5)
+
+            local Fill = New("Frame", {
+
+                Size = UDim2.new(
+                    (Value - Minimum) / (Maximum - Minimum),
+                    0,
+                    1,
+                    0
+                ),
+
+                BackgroundColor3 = Theme.Accent
+
+            }, Bar)
+
+            Corner(Fill, 5)
+
+            local SliderObject = {}
+
+            local Dragging = false
+
+            local function Set(value)
+
+                Value = math.clamp(
+                    tonumber(value) or Minimum,
+                    Minimum,
+                    Maximum
+                )
+
+                local Percent =
+                    (Value - Minimum) /
+                    (Maximum - Minimum)
+
+                Fill.Size = UDim2.new(
+                    Percent,
+                    0,
+                    1,
+                    0
+                )
+
+                ValueLabel.Text =
+                    tostring(math.floor(Value * 100) / 100)
+
+                if typeof(options.Callback) == "function" then
+                    task.spawn(options.Callback, Value)
+                end
+
+            end
+
+            local function SetFromMouse(x)
+
+                local Percent = math.clamp(
+
+                    (x - Bar.AbsolutePosition.X) /
+                    Bar.AbsoluteSize.X,
+
+                    0,
+                    1
+
+                )
+
+                Set(
+                    Minimum +
+                    (Maximum - Minimum) *
+                    Percent
+                )
+
+            end
+
+            Bar.InputBegan:Connect(function(input)
+
+                if input.UserInputType ==
+                    Enum.UserInputType.MouseButton1 then
+
+                    Dragging = true
+
+                    SetFromMouse(input.Position.X)
+
+                end
+
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+
+                if Dragging and
+                    input.UserInputType ==
+                    Enum.UserInputType.MouseMovement then
+
+                    SetFromMouse(input.Position.X)
+
+                end
+
+            end)
+
+            UserInputService.InputEnded:Connect(function(input)
+
+                if input.UserInputType ==
+                    Enum.UserInputType.MouseButton1 then
+
+                    Dragging = false
+
+                end
+
+            end)
+
+            function SliderObject:Set(value)
+                Set(value)
+            end
+
+            function SliderObject:Get()
+                return Value
+            end
+
+            return SliderObject
+
+        end
+
+        --================================================--
+        --                   DROPDOWN                      --
+        --================================================--
+
+        function Tab:CreateDropdown(options)
+
+            options = options or {}
+
+            local List = options.Options or {}
+
+            local Selected = options.Default or List[1]
+
+            local Open = false
+
+            local Holder = New("Frame", {
+
+                Size = UDim2.new(1, 0, 0, 43),
+
+                BackgroundColor3 = Theme.Panel,
+
+                ClipsDescendants = true
+
+            }, TabPage)
+
+            Corner(Holder, 8)
+
+            local Button = New("TextButton", {
+
+                Size = UDim2.new(1, 0, 0, 43),
+
+                BackgroundTransparency = 1,
+
+                Text = (options.Name or "Dropdown") ..
+                    "    " ..
+                    tostring(Selected or "..."),
+
+                TextColor3 = Theme.Text,
+
+                TextSize = 14,
+
+                Font = Enum.Font.Gotham,
+
+                TextXAlignment = Enum.TextXAlignment.Left,
+
+                AutoButtonColor = false
+
+            }, Holder)
+
+            local Padding = Instance.new("UIPadding")
+            Padding.PaddingLeft = UDim.new(0, 14)
+            Padding.Parent = Button
+
+            local OptionHolder = New("Frame", {
+
+                Size = UDim2.new(
+                    1,
+                    0,
+                    0,
+                    #List * 34
+                ),
+
+                Position = UDim2.new(0, 0, 0, 43),
+
+                BackgroundTransparency = 1
+
+            }, Holder)
+
+            New("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder
+            }, OptionHolder)
+
+            local DropdownObject = {}
+
+            local function Select(option)
+
+                Selected = option
+
+                Button.Text =
+                    (options.Name or "Dropdown") ..
+                    "    " ..
+                    tostring(Selected)
+
+                if typeof(options.Callback) == "function" then
+                    task.spawn(options.Callback, Selected)
+                end
+
+            end
+
+            for _, option in ipairs(List) do
+
+                local OptionButton = New("TextButton", {
+
+                    Size = UDim2.new(1, 0, 0, 34),
+
+                    BackgroundColor3 = Theme.PanelHover,
+
+                    Text = tostring(option),
+
+                    TextColor3 = Theme.Text,
+
+                    TextSize = 13,
+
+                    Font = Enum.Font.Gotham,
+
+                    AutoButtonColor = false
+
+                }, OptionHolder)
+
+                OptionButton.MouseButton1Click:Connect(function()
+
+                    Select(option)
+
+                    Open = false
+
+                    Holder.Size = UDim2.new(
+                        1,
+                        0,
+                        0,
+                        43
+                    )
+
+                end)
+
+            end
+
+            Button.MouseButton1Click:Connect(function()
+
+                Open = not Open
+
+                if Open then
+
+                    Holder.Size = UDim2.new(
+                        1,
+                        0,
+                        0,
+                        43 + (#List * 34)
+                    )
+
+                else
+
+                    Holder.Size = UDim2.new(
+                        1,
+                        0,
+                        0,
+                        43
+                    )
+
+                end
+
+            end)
+
+            function DropdownObject:Set(value)
+                Select(value)
+            end
+
+            function DropdownObject:Get()
+                return Selected
+            end
+
+            return DropdownObject
+
+        end
+
+        return Tab
+
+    end
+
+    --====================================================--
+    --                   NOTIFICATIONS                    --
+    --====================================================--
+
+    local NotificationHolder = New("Frame", {
+
+        Name = "Notifications",
+
+        Size = UDim2.new(0, 300, 1, -90),
+
+        Position = UDim2.new(
+            1,
+            -315,
+            0,
+            75
+        ),
+
+        BackgroundTransparency = 1,
+
+        ZIndex = 200
+
+    }, ScreenGui)
+
+    New("UIListLayout", {
+
+        Padding = UDim.new(0, 8),
+
+        VerticalAlignment = Enum.VerticalAlignment.Bottom
+
+    }, NotificationHolder)
+
+    function window:Notify(options)
+
+        options = options or {}
+
+        local Duration = tonumber(options.Duration) or 3
+
+        local Notification = New("Frame", {
+
+            Size = UDim2.new(1, 0, 0, 72),
+
+            BackgroundColor3 = Theme.Panel,
+
+            BorderSizePixel = 0,
+
+            ZIndex = 201
+
+        }, NotificationHolder)
+
+        Corner(Notification, 9)
+        AddStroke(Notification, Theme.Stroke, 1)
+
+        New("TextLabel", {
+
+            Size = UDim2.new(1, -20, 0, 22),
+
+            Position = UDim2.new(0, 10, 0, 8),
+
+            BackgroundTransparency = 1,
+
+            Text = options.Title or "1td0s",
+
+            TextColor3 = Theme.Text,
+
+            TextSize = 14,
+
+            Font = Enum.Font.GothamSemibold,
+
+            TextXAlignment = Enum.TextXAlignment.Left,
+
+            ZIndex = 202
+
+        }, Notification)
+
+        New("TextLabel", {
+
+            Size = UDim2.new(1, -20, 0, 32),
+
+            Position = UDim2.new(0, 10, 0, 32),
+
+            BackgroundTransparency = 1,
+
+            Text = options.Content or "",
+
+            TextColor3 = Theme.SubText,
+
+            TextSize = 12,
+
+            Font = Enum.Font.Gotham,
+
+            TextWrapped = true,
+
+            TextXAlignment = Enum.TextXAlignment.Left,
+
+            ZIndex = 202
+
+        }, Notification)
+
+        task.delay(Duration, function()
+
+            if Notification and Notification.Parent then
+                Notification:Destroy()
+            end
+
+        end)
+
+        return Notification
+
+    end
+
+    --====================================================--
+    --                   SETTINGS TAB                    --
+    --====================================================--
+
+    local Settings = window:CreateTab({
+
+        Name = "Settings",
+
+        Icon = "⚙"
+
+    })
+
+    Settings:CreateSection("APPEARANCE")
+
+    Settings:CreateLabel(
+        "Change the background color of the menu."
+    )
+
+    local ColorHolder = New("Frame", {
+
+        Size = UDim2.new(1, 0, 0, 130),
+
+        BackgroundColor3 = Theme.Panel
+
+    }, Settings.Page)
+
+    Corner(ColorHolder, 8)
+
+    local Preview = New("Frame", {
+
+        Size = UDim2.new(0, 55, 0, 55),
+
+        Position = UDim2.new(0, 15, 0, 15),
+
+        BackgroundColor3 = Theme.Background
+
+    }, ColorHolder)
+
+    Corner(Preview, 8)
+
+    AddStroke(Preview, Theme.Stroke, 1)
+
+    local ColorBox = New("TextBox", {
+
+        Size = UDim2.new(1, -90, 0, 40),
+
+        Position = UDim2.new(0, 80, 0, 23),
+
+        BackgroundColor3 = Theme.Background,
+
+        Text = Color3ToHex(Theme.Background),
+
+        PlaceholderText = "#RRGGBB",
+
+        TextColor3 = Theme.Text,
+
+        PlaceholderColor3 = Theme.Muted,
+
+        TextSize = 14,
+
+        Font = Enum.Font.Gotham,
+
+        ClearTextOnFocus = false
+
+    }, ColorHolder)
+
+    Corner(ColorBox, 7)
+
+    AddStroke(ColorBox, Theme.Stroke, 1)
+
+    local ApplyColor = New("TextButton", {
+
+        Size = UDim2.new(1, -30, 0, 35),
+
+        Position = UDim2.new(0, 15, 0, 82),
+
+        BackgroundColor3 = Theme.Accent,
+
+        Text = "Apply Background Color",
+
+        TextColor3 = Theme.White,
+
+        TextSize = 13,
+
+        Font = Enum.Font.GothamSemibold,
+
+        AutoButtonColor = false
+
+    }, ColorHolder)
+
+    Corner(ApplyColor, 7)
+
+    ApplyColor.MouseButton1Click:Connect(function()
+
+        local NewColor = HexToColor3(ColorBox.Text)
+
+        if not NewColor then
+
+            window:Notify({
+
+                Title = "1td0s",
+
+                Content = "Invalid color. Use #RRGGBB.",
+
+                Duration = 3
+
+            })
+
+            return
+
+        end
+
+        Theme.Background = NewColor
+
+        Main.BackgroundColor3 = NewColor
+        Preview.BackgroundColor3 = NewColor
+
+        ColorBox.Text = Color3ToHex(NewColor)
+
+        window:Notify({
+
+            Title = "Settings",
+
+            Content = "Background color updated.",
+
+            Duration = 2
+
+        })
+
+    end)
+
+    --====================================================--
+    --                 SETTINGS: RESET                  --
+    --====================================================--
+
+    Settings:CreateSection("WINDOW")
+
+    Settings:CreateButton({
+
+        Name = "Reset Window Size",
+
+        Callback = function()
+
+            Main.Size = UDim2.new(
+                0,
+                760,
+                0,
+                500
+            )
+
+            window:Notify({
+
+                Title = "Settings",
+
+                Content = "Window size reset.",
+
+                Duration = 2
+
+            })
+
+        end
+
+    })
+
+    Settings:CreateButton({
+
+        Name = "Reset Background",
+
+        Callback = function()
+
+            Theme.Background =
+                Color3.fromRGB(7, 11, 22)
+
+            Main.BackgroundColor3 =
+                Theme.Background
+
+            Preview.BackgroundColor3 =
+                Theme.Background
+
+            ColorBox.Text =
+                Color3ToHex(Theme.Background)
+
+        end
+
+    })
+
+    --====================================================--
+    --                   WINDOW METHODS                  --
+    --====================================================--
+
+    function window:Destroy()
+
+        if ScreenGui then
+            ScreenGui:Destroy()
+        end
+
+    end
+
+    function window:Toggle()
+
+        if ScreenGui.Enabled == true then
+            ScreenGui.Enabled = false
+        else
+            ScreenGui.Enabled = true
+        end
+
+    end
+
+    function window:SetBackgroundColor(color)
+
+        if typeof(color) == "Color3" then
+
+            Theme.Background = color
+            Main.BackgroundColor3 = color
+            Preview.BackgroundColor3 = color
+
+        end
+
+    end
+
+    function window:GetBackgroundColor()
+
+        return Theme.Background
+
+    end
+
+    return window
+
+end
+
+--========================================================--
+--                     RETURN LIBRARY                     --
+--========================================================--
+
+return tdos
