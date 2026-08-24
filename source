@@ -1,218 +1,124 @@
--- 1td0s gui, dc 1td0s
-local P = {
-    "==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"
+-- 1td0s free use gui
+
+local Tdos = {}
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local C = {
+    bg = Color3.fromRGB(7,11,22), sidebar = Color3.fromRGB(10,15,29), panel = Color3.fromRGB(15,21,38),
+    hover = Color3.fromRGB(24,34,58), stroke = Color3.fromRGB(35,49,78), accent = Color3.fromRGB(63,142,255),
+    text = Color3.fromRGB(235,241,255), sub = Color3.fromRGB(137,151,178), muted = Color3.fromRGB(74,88,115)
 }
 
-local function xs32(x)
-    x = x % 4294967296
-    x = bit32.bxor(x, (x * 8192) % 4294967296)
-    x = bit32.bxor(x, math.floor(x / 131072))
-    x = bit32.bxor(x, (x * 32) % 4294967296)
-    return x % 4294967296
+local function New(class, props, parent)
+    local x = Instance.new(class)
+    for k,v in pairs(props or {}) do x[k] = v end
+    x.Parent = parent
+    return x
 end
+local function Round(x,r) New("UICorner",{CornerRadius=UDim.new(0,r or 7)},x) end
+local function Line(x) New("UIStroke",{Color=C.stroke,Thickness=1},x) end
+local function Tween(x,p,t) TweenService:Create(x,TweenInfo.new(t or .15,Enum.EasingStyle.Quad),p):Play() end
 
-local function b64(s)
-    local A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local M = {}
-    for i = 1, #A do
-        M[A:sub(i,i)] = i - 1
-    end
-
-    local o = {}
-    local n = 0
-    for i = 1, #s, 4 do
-        local a = M[s:sub(i,i)] or 0
-        local b = M[s:sub(i+1,i+1)] or 0
-        local cc = s:sub(i+2,i+2)
-        local dd = s:sub(i+3,i+3)
-        local c = M[cc] or 0
-        local d = M[dd] or 0
-
-        n = n + 1
-        o[n] = string.char(a * 4 + math.floor(b / 16))
-
-        if cc ~= "" and cc ~= "=" then
-            n = n + 1
-            o[n] = string.char((b % 16) * 16 + math.floor(c / 4))
+local function Drag(handle,target)
+    local active,start,pos
+    handle.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 then
+            active=true; start=i.Position; pos=target.Position
+            i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then active=false end end)
         end
-
-        if dd ~= "" and dd ~= "=" then
-            n = n + 1
-            o[n] = string.char((c % 4) * 64 + d)
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if active and i.UserInputType==Enum.UserInputType.MouseMovement then
+            local d=i.Position-start
+            target.Position=UDim2.new(pos.X.Scale,pos.X.Offset+d.X,pos.Y.Scale,pos.Y.Offset+d.Y)
         end
+    end)
+end
+
+function Tdos:CreateWindow(opt)
+    opt=opt or {}
+    local W,H=opt.Width or 760,opt.Height or 500
+    local old=PlayerGui:FindFirstChild("Mongui") if old then old:Destroy() end
+
+    local gui=New("ScreenGui",{Name="Mongui",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},PlayerGui)
+    local win=New("Frame",{Size=UDim2.fromOffset(W,H),Position=UDim2.fromScale(.5,.5),AnchorPoint=Vector2.new(.5,.5),BackgroundColor3=C.bg,BorderSizePixel=0,ClipsDescendants=true},gui)
+    Round(win,12); Line(win)
+
+    local head=New("Frame",{Size=UDim2.new(1,0,0,62),BackgroundTransparency=1},win)
+    New("TextLabel",{Size=UDim2.new(1,-180,0,27),Position=UDim2.fromOffset(18,8),BackgroundTransparency=1,Text=opt.Name or "MONGUI",TextColor3=C.text,TextSize=19,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},head)
+    New("TextLabel",{Size=UDim2.new(1,-180,0,18),Position=UDim2.fromOffset(18,34),BackgroundTransparency=1,Text=opt.Subtitle or "Custom Interface",TextColor3=C.sub,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left},head)
+    local status=New("TextLabel",{Size=UDim2.fromOffset(90,20),Position=UDim2.new(1,-160,0,21),BackgroundTransparency=1,Text="● READY",TextColor3=C.accent,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Right},head)
+    local min=New("TextButton",{Size=UDim2.fromOffset(28,28),Position=UDim2.new(1,-82,0,16),BackgroundTransparency=1,Text="—",TextColor3=C.sub,TextSize=18,Font=Enum.Font.GothamBold,AutoButtonColor=false},head)
+    local close=New("TextButton",{Size=UDim2.fromOffset(28,28),Position=UDim2.new(1,-45,0,16),BackgroundTransparency=1,Text="×",TextColor3=C.sub,TextSize=22,Font=Enum.Font.Gotham,AutoButtonColor=false},head)
+    Drag(head,win)
+
+    local side=New("Frame",{Size=UDim2.new(0,155,1,-62),Position=UDim2.fromOffset(0,62),BackgroundColor3=C.sidebar,BorderSizePixel=0},win)
+    New("TextLabel",{Size=UDim2.new(1,-24,0,20),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,Text="MENU",TextColor3=C.muted,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},side)
+    local tabs=New("Frame",{Size=UDim2.new(1,-16,1,-42),Position=UDim2.fromOffset(8,38),BackgroundTransparency=1},side)
+    New("UIListLayout",{Padding=UDim.new(0,6)},tabs)
+    local content=New("Frame",{Size=UDim2.new(1,-155,1,-62),Position=UDim2.fromOffset(155,62),BackgroundTransparency=1},win)
+    local allTabs,active
+
+    local window={}
+    function window:CreateTab(o)
+        o=o or {}; local page=New("ScrollingFrame",{Size=UDim2.new(1,-28,1,-28),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,ScrollBarImageColor3=C.accent,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),Visible=false},content)
+        New("UIListLayout",{Padding=UDim.new(0,9)},page)
+        local b=New("TextButton",{Size=UDim2.new(1,0,0,38),BackgroundColor3=C.sidebar,BorderSizePixel=0,Text="",AutoButtonColor=false},tabs); Round(b,7)
+        New("TextLabel",{Size=UDim2.fromOffset(25,38),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=o.Icon or "◆",TextColor3=C.accent,TextSize=11,Font=Enum.Font.GothamBold},b)
+        New("TextLabel",{Size=UDim2.new(1,-40,1,0),Position=UDim2.fromOffset(34,0),BackgroundTransparency=1,Text=o.Name or "Tab",TextColor3=C.sub,TextSize=12,Font=Enum.Font.GothamMedium,TextXAlignment=Enum.TextXAlignment.Left},b)
+        local data={Button=b,Page=page}
+        allTabs=allTabs or {}; table.insert(allTabs,data)
+        local function select()
+            for _,t in ipairs(allTabs) do
+                t.Page.Visible=(t==data); Tween(t.Button,{BackgroundColor3=t==data and C.hover or C.sidebar})
+                local lbl=t.Button:FindFirstChildWhichIsA("TextLabel",true)
+                if lbl and lbl~=t.Button then lbl.TextColor3=t==data and C.text or C.sub end
+            end
+            active=data
+        end
+        b.MouseButton1Click:Connect(select)
+        if #allTabs==1 then select() end
+
+        function data:CreateSection(text)
+            return New("TextLabel",{Size=UDim2.new(1,-4,0,25),BackgroundTransparency=1,Text=string.upper(text or "SECTION"),TextColor3=C.accent,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},page)
+        end
+        function data:CreateLabel(text)
+            return New("TextLabel",{Size=UDim2.new(1,-4,0,28),BackgroundTransparency=1,Text=text or "",TextColor3=C.sub,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left},page)
+        end
+        function data:CreateButton(o)
+            o=o or {}; local b=New("TextButton",{Size=UDim2.new(1,-4,0,42),BackgroundColor3=C.panel,BorderSizePixel=0,Text=o.Name or "Button",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamMedium,AutoButtonColor=false},page); Round(b); Line(b)
+            b.MouseEnter:Connect(function() Tween(b,{BackgroundColor3=C.hover}) end); b.MouseLeave:Connect(function() Tween(b,{BackgroundColor3=C.panel}) end)
+            b.MouseButton1Click:Connect(function() if o.Callback then task.spawn(o.Callback) end end); return b
+        end
+        function data:CreateToggle(o)
+            o=o or {}; local val=o.Default==true
+            local row=New("TextButton",{Size=UDim2.new(1,-4,0,42),BackgroundColor3=C.panel,BorderSizePixel=0,Text="",AutoButtonColor=false},page); Round(row); Line(row)
+            New("TextLabel",{Size=UDim2.new(1,-75,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=1,Text=o.Name or "Toggle",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamMedium,TextXAlignment=Enum.TextXAlignment.Left},row)
+            local sw=New("Frame",{Size=UDim2.fromOffset(42,22),Position=UDim2.new(1,-56,.5,-11),BackgroundColor3=C.panel,BorderSizePixel=0},row); Round(sw,11); Line(sw)
+            local knob=New("Frame",{Size=UDim2.fromOffset(16,16),Position=UDim2.fromOffset(3,3),BackgroundColor3=C.muted,BorderSizePixel=0},sw); Round(knob,8)
+            local function set(v,fire) val=v==true; Tween(knob,{Position=val and UDim2.fromOffset(23,3) or UDim2.fromOffset(3,3),BackgroundColor3=val and C.text or C.muted}); Tween(sw,{BackgroundColor3=val and C.accent or C.panel}); if fire and o.Callback then task.spawn(o.Callback,val) end end
+            row.MouseButton1Click:Connect(function() set(not val,true) end); set(val,false)
+            return {Set=function(_,v)set(v,true)end,Get=function()return val end,Instance=row}
+        end
+        return data
     end
-    return table.concat(o)
+    function window:SetStatus(text) status.Text="● "..tostring(text) end
+    function window:Notify(o)
+        o=o or {}; local n=gui:FindFirstChild("Notifications") or New("Frame",{Name="Notifications",Size=UDim2.fromOffset(300,400),Position=UDim2.new(1,-315,1,-415),BackgroundTransparency=1},gui)
+        if not n:FindFirstChildOfClass("UIListLayout") then New("UIListLayout",{Padding=UDim.new(0,8),VerticalAlignment=Enum.VerticalAlignment.Bottom},n) end
+        local card=New("Frame",{Size=UDim2.new(1,0,0,64),BackgroundColor3=C.panel,BorderSizePixel=0},n); Round(card); Line(card)
+        New("TextLabel",{Size=UDim2.new(1,-24,0,20),Position=UDim2.fromOffset(12,7),BackgroundTransparency=1,Text=o.Title or "Notification",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},card)
+        New("TextLabel",{Size=UDim2.new(1,-24,0,25),Position=UDim2.fromOffset(12,29),BackgroundTransparency=1,Text=o.Content or "",TextColor3=C.sub,TextSize=10,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true},card)
+        task.delay(o.Duration or 3,function()if card.Parent then Tween(card,{BackgroundTransparency=1},.2);task.wait(.2);card:Destroy()end end)
+    end
+    local minimized=false
+    min.MouseButton1Click:Connect(function() minimized=not minimized; Tween(win,{Size=minimized and UDim2.fromOffset(W,62) or UDim2.fromOffset(W,H)},.2) end)
+    close.MouseButton1Click:Connect(function() gui:Destroy() end)
+    function window:Destroy() gui:Destroy() end
+    return window
 end
 
-local packed = table.concat(P):reverse()
-local raw = b64(packed)
-
-local seed = 2814615073
-local out = {}
-
-for i = 1, #raw do
-    seed = xs32(seed)
-    out[i] = string.char(bit32.bxor(raw:byte(i), seed % 256))
-end
-
-local fn, err = loadstring(table.concat(out))
-if not fn then
-    error(err)
-end
-
-return fn()
+return Tdos
