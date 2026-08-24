@@ -1,0 +1,125 @@
+-- Mongui - Blue Night UI library
+-- Return this table so it can be loaded with loadstring(HttpGet(...))()
+
+local Tdos = {}
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local C = {
+    bg = Color3.fromRGB(7,11,22), sidebar = Color3.fromRGB(10,15,29), panel = Color3.fromRGB(15,21,38),
+    hover = Color3.fromRGB(24,34,58), stroke = Color3.fromRGB(35,49,78), accent = Color3.fromRGB(63,142,255),
+    text = Color3.fromRGB(235,241,255), sub = Color3.fromRGB(137,151,178), muted = Color3.fromRGB(74,88,115)
+}
+
+local function New(class, props, parent)
+    local x = Instance.new(class)
+    for k,v in pairs(props or {}) do x[k] = v end
+    x.Parent = parent
+    return x
+end
+local function Round(x,r) New("UICorner",{CornerRadius=UDim.new(0,r or 7)},x) end
+local function Line(x) New("UIStroke",{Color=C.stroke,Thickness=1},x) end
+local function Tween(x,p,t) TweenService:Create(x,TweenInfo.new(t or .15,Enum.EasingStyle.Quad),p):Play() end
+
+local function Drag(handle,target)
+    local active,start,pos
+    handle.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 then
+            active=true; start=i.Position; pos=target.Position
+            i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then active=false end end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if active and i.UserInputType==Enum.UserInputType.MouseMovement then
+            local d=i.Position-start
+            target.Position=UDim2.new(pos.X.Scale,pos.X.Offset+d.X,pos.Y.Scale,pos.Y.Offset+d.Y)
+        end
+    end)
+end
+
+function Tdos:CreateWindow(opt)
+    opt=opt or {}
+    local W,H=opt.Width or 760,opt.Height or 500
+    local old=PlayerGui:FindFirstChild("Mongui") if old then old:Destroy() end
+
+    local gui=New("ScreenGui",{Name="Mongui",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},PlayerGui)
+    local win=New("Frame",{Size=UDim2.fromOffset(W,H),Position=UDim2.fromScale(.5,.5),AnchorPoint=Vector2.new(.5,.5),BackgroundColor3=C.bg,BorderSizePixel=0,ClipsDescendants=true},gui)
+    Round(win,12); Line(win)
+
+    local head=New("Frame",{Size=UDim2.new(1,0,0,62),BackgroundTransparency=1},win)
+    New("TextLabel",{Size=UDim2.new(1,-180,0,27),Position=UDim2.fromOffset(18,8),BackgroundTransparency=1,Text=opt.Name or "MONGUI",TextColor3=C.text,TextSize=19,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},head)
+    New("TextLabel",{Size=UDim2.new(1,-180,0,18),Position=UDim2.fromOffset(18,34),BackgroundTransparency=1,Text=opt.Subtitle or "Custom Interface",TextColor3=C.sub,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left},head)
+    local status=New("TextLabel",{Size=UDim2.fromOffset(90,20),Position=UDim2.new(1,-160,0,21),BackgroundTransparency=1,Text="● READY",TextColor3=C.accent,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Right},head)
+    local min=New("TextButton",{Size=UDim2.fromOffset(28,28),Position=UDim2.new(1,-82,0,16),BackgroundTransparency=1,Text="—",TextColor3=C.sub,TextSize=18,Font=Enum.Font.GothamBold,AutoButtonColor=false},head)
+    local close=New("TextButton",{Size=UDim2.fromOffset(28,28),Position=UDim2.new(1,-45,0,16),BackgroundTransparency=1,Text="×",TextColor3=C.sub,TextSize=22,Font=Enum.Font.Gotham,AutoButtonColor=false},head)
+    Drag(head,win)
+
+    local side=New("Frame",{Size=UDim2.new(0,155,1,-62),Position=UDim2.fromOffset(0,62),BackgroundColor3=C.sidebar,BorderSizePixel=0},win)
+    New("TextLabel",{Size=UDim2.new(1,-24,0,20),Position=UDim2.fromOffset(12,12),BackgroundTransparency=1,Text="MENU",TextColor3=C.muted,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},side)
+    local tabs=New("Frame",{Size=UDim2.new(1,-16,1,-42),Position=UDim2.fromOffset(8,38),BackgroundTransparency=1},side)
+    New("UIListLayout",{Padding=UDim.new(0,6)},tabs)
+    local content=New("Frame",{Size=UDim2.new(1,-155,1,-62),Position=UDim2.fromOffset(155,62),BackgroundTransparency=1},win)
+    local allTabs,active
+
+    local window={}
+    function window:CreateTab(o)
+        o=o or {}; local page=New("ScrollingFrame",{Size=UDim2.new(1,-28,1,-28),Position=UDim2.fromOffset(14,14),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,ScrollBarImageColor3=C.accent,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),Visible=false},content)
+        New("UIListLayout",{Padding=UDim.new(0,9)},page)
+        local b=New("TextButton",{Size=UDim2.new(1,0,0,38),BackgroundColor3=C.sidebar,BorderSizePixel=0,Text="",AutoButtonColor=false},tabs); Round(b,7)
+        New("TextLabel",{Size=UDim2.fromOffset(25,38),Position=UDim2.fromOffset(8,0),BackgroundTransparency=1,Text=o.Icon or "◆",TextColor3=C.accent,TextSize=11,Font=Enum.Font.GothamBold},b)
+        New("TextLabel",{Size=UDim2.new(1,-40,1,0),Position=UDim2.fromOffset(34,0),BackgroundTransparency=1,Text=o.Name or "Tab",TextColor3=C.sub,TextSize=12,Font=Enum.Font.GothamMedium,TextXAlignment=Enum.TextXAlignment.Left},b)
+        local data={Button=b,Page=page}
+        allTabs=allTabs or {}; table.insert(allTabs,data)
+        local function select()
+            for _,t in ipairs(allTabs) do
+                t.Page.Visible=(t==data); Tween(t.Button,{BackgroundColor3=t==data and C.hover or C.sidebar})
+                local lbl=t.Button:FindFirstChildWhichIsA("TextLabel",true)
+                if lbl and lbl~=t.Button then lbl.TextColor3=t==data and C.text or C.sub end
+            end
+            active=data
+        end
+        b.MouseButton1Click:Connect(select)
+        if #allTabs==1 then select() end
+
+        function data:CreateSection(text)
+            return New("TextLabel",{Size=UDim2.new(1,-4,0,25),BackgroundTransparency=1,Text=string.upper(text or "SECTION"),TextColor3=C.accent,TextSize=10,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},page)
+        end
+        function data:CreateLabel(text)
+            return New("TextLabel",{Size=UDim2.new(1,-4,0,28),BackgroundTransparency=1,Text=text or "",TextColor3=C.sub,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left},page)
+        end
+        function data:CreateButton(o)
+            o=o or {}; local b=New("TextButton",{Size=UDim2.new(1,-4,0,42),BackgroundColor3=C.panel,BorderSizePixel=0,Text=o.Name or "Button",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamMedium,AutoButtonColor=false},page); Round(b); Line(b)
+            b.MouseEnter:Connect(function() Tween(b,{BackgroundColor3=C.hover}) end); b.MouseLeave:Connect(function() Tween(b,{BackgroundColor3=C.panel}) end)
+            b.MouseButton1Click:Connect(function() if o.Callback then task.spawn(o.Callback) end end); return b
+        end
+        function data:CreateToggle(o)
+            o=o or {}; local val=o.Default==true
+            local row=New("TextButton",{Size=UDim2.new(1,-4,0,42),BackgroundColor3=C.panel,BorderSizePixel=0,Text="",AutoButtonColor=false},page); Round(row); Line(row)
+            New("TextLabel",{Size=UDim2.new(1,-75,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=1,Text=o.Name or "Toggle",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamMedium,TextXAlignment=Enum.TextXAlignment.Left},row)
+            local sw=New("Frame",{Size=UDim2.fromOffset(42,22),Position=UDim2.new(1,-56,.5,-11),BackgroundColor3=C.panel,BorderSizePixel=0},row); Round(sw,11); Line(sw)
+            local knob=New("Frame",{Size=UDim2.fromOffset(16,16),Position=UDim2.fromOffset(3,3),BackgroundColor3=C.muted,BorderSizePixel=0},sw); Round(knob,8)
+            local function set(v,fire) val=v==true; Tween(knob,{Position=val and UDim2.fromOffset(23,3) or UDim2.fromOffset(3,3),BackgroundColor3=val and C.text or C.muted}); Tween(sw,{BackgroundColor3=val and C.accent or C.panel}); if fire and o.Callback then task.spawn(o.Callback,val) end end
+            row.MouseButton1Click:Connect(function() set(not val,true) end); set(val,false)
+            return {Set=function(_,v)set(v,true)end,Get=function()return val end,Instance=row}
+        end
+        return data
+    end
+    function window:SetStatus(text) status.Text="● "..tostring(text) end
+    function window:Notify(o)
+        o=o or {}; local n=gui:FindFirstChild("Notifications") or New("Frame",{Name="Notifications",Size=UDim2.fromOffset(300,400),Position=UDim2.new(1,-315,1,-415),BackgroundTransparency=1},gui)
+        if not n:FindFirstChildOfClass("UIListLayout") then New("UIListLayout",{Padding=UDim.new(0,8),VerticalAlignment=Enum.VerticalAlignment.Bottom},n) end
+        local card=New("Frame",{Size=UDim2.new(1,0,0,64),BackgroundColor3=C.panel,BorderSizePixel=0},n); Round(card); Line(card)
+        New("TextLabel",{Size=UDim2.new(1,-24,0,20),Position=UDim2.fromOffset(12,7),BackgroundTransparency=1,Text=o.Title or "Notification",TextColor3=C.text,TextSize=12,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left},card)
+        New("TextLabel",{Size=UDim2.new(1,-24,0,25),Position=UDim2.fromOffset(12,29),BackgroundTransparency=1,Text=o.Content or "",TextColor3=C.sub,TextSize=10,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true},card)
+        task.delay(o.Duration or 3,function()if card.Parent then Tween(card,{BackgroundTransparency=1},.2);task.wait(.2);card:Destroy()end end)
+    end
+    local minimized=false
+    min.MouseButton1Click:Connect(function() minimized=not minimized; Tween(win,{Size=minimized and UDim2.fromOffset(W,62) or UDim2.fromOffset(W,H)},.2) end)
+    close.MouseButton1Click:Connect(function() gui:Destroy() end)
+    function window:Destroy() gui:Destroy() end
+    return window
+end
+
+return Tdos
