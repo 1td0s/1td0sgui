@@ -17,7 +17,7 @@ local LocalPlayer = Players.LocalPlayer
 local tdos = {}
 
 tdos.Name = "1td0s"
-tdos.Version = "2.0.0"
+tdos.Version = "4.0.0"
 
 --========================================================--
 --                         THEME                          --
